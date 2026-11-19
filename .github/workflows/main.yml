@@ -1,23 +1,50 @@
-name: Build AAB
+
+name: Build Near Allah AAB
+
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: '17'
-          distribution: 'temurin'
-      - name: Build Release AAB
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK 36
         run: |
-          chmod +x gradlew
-          ./gradlew bundleRelease
-      - name: Upload AAB
+          sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Setup Gradle 9.3.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+
+      - name: Verify Environment
+        run: |
+          java -version
+          gradle --version
+
+      - name: Build Release AAB
+        run: gradle --no-daemon bundleRelease
+
+      - name: Upload Near Allah AAB
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-aab
-          path: app/build/outputs/bundle/release/app-release.aab
+          name: Near-Allah-Release-AAB
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
